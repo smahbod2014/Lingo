@@ -14,15 +14,23 @@ public class Lingo extends ApplicationAdapter {
 	@Override
 	public void create() {
 		batch = new SpriteBatch();
-		img = new Texture("badlogic.jpg");
+		img = new Texture("BaseTile.png");
 	}
 
 	@Override
 	public void render() {
 		Gdx.gl.glClearColor(1, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        float size = 64f;
+        float padding = size / 10f;
+
 		batch.begin();
-		batch.draw(img, 0, 0);
+        float position = 32f;
+        for (int i = 0; i < 5; i++) {
+		    batch.draw(img, position, 400, size, size);
+            position += size + padding;
+        }
 		batch.end();
 	}
 }
