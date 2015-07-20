@@ -1,19 +1,31 @@
 package com.koda.lingo.states;
 
-import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.koda.lingo.Lingo;
 import com.koda.lingo.internal.GameState;
-
-import java.util.ArrayList;
+import com.koda.lingo.internal.MyInputProcessor;
+import com.koda.lingo.logic.Board;
 
 public class PlayState extends GameState {
 
-    ArrayList<Texture> tiles = new ArrayList<Texture>();
+    Board board;
 
     public PlayState() {
-        for (int i = 0; i < 5; i++) {
-            Texture tex = new Texture("tiles_48/Tile_48_" + (char) ('A' + i) + ".png");
-            tiles.add(tex);
+        board = new Board(5, Board.PADDING, 200);
+        board.initializeRow("K");
+
+        Gdx.input.setInputProcessor(new MyInputProcessor(this));
+    }
+
+    public void typeKey(int key) {
+        if (key >= Input.Keys.A && key <= Input.Keys.Z && board.getColumn() < Board.WORD_LENGTH)
+            board.addLetter("" + (char) (key + 36));
+        else if (key == Input.Keys.BACKSPACE && board.getColumn() > 0)
+            board.removeLast();
+        else if (key == Input.Keys.ENTER) {
+            //submit
         }
     }
 
@@ -24,21 +36,18 @@ public class PlayState extends GameState {
 
     @Override
     public void update(float dt) {
-        super.update(dt);
+        if (Gdx.input.justTouched()) {
+            Lingo.log("Touched at: " + Lingo.getTouchCoords());
+        }
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
+            System.out.println("SPACE");
+        }
     }
 
     @Override
     public void render(SpriteBatch sb) {
-        float size = tiles.get(0).getWidth();
-        float padding = size / 10f;
-
-        sb.begin();
-        float position = 8f;
-        for (int i = 0; i < 5; i++) {
-            sb.draw(tiles.get(i), position, 400, size, size);
-            position += size + padding;
-        }
-        sb.end();
+        board.render(sb);
     }
 
     @Override
