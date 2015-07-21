@@ -3,6 +3,7 @@ package com.koda.lingo.logic;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.koda.lingo.Lingo;
+import com.koda.lingo.internal.Resources;
 
 public class Tile {
 
@@ -39,7 +40,7 @@ public class Tile {
         sb.begin();
         float x = renderX;
         float y = renderY;
-        sb.draw(Lingo.getBlankTile(), x, y);
+        sb.draw(Resources.getTexture("blank"), x, y);
         Lingo.getFont().draw(sb, value, x + Lingo.TILE_SIZE / 2 - width / 2, y + Lingo.TILE_SIZE / 2 + height / 2);
         sb.end();
     }

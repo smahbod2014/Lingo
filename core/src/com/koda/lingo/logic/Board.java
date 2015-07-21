@@ -14,6 +14,7 @@ public class Board {
     public static final float TILE_PAD_SIZE = Lingo.TILE_SIZE + PADDING * 2;
 
     private ArrayList<Tile> tiles;
+    private Cursor cursor;
     private int rows;
     private int currentRow;
     private int currentColumn;
@@ -26,6 +27,7 @@ public class Board {
         renderX = x;
         renderY = y;
         currentRow = 0;
+        cursor = new Cursor(this);
     }
 
     public void initializeRow(String letter) {
@@ -40,6 +42,7 @@ public class Board {
         }
 
         currentColumn = 1;
+        cursor.setPosition(currentRow, currentColumn);
     }
 
     public void addLetter(String letter) {
@@ -47,12 +50,14 @@ public class Board {
         Tile t = getTile(currentRow, currentColumn);
         t.setValue(letter);
         currentColumn++;
+        cursor.setPosition(currentRow, currentColumn);
     }
 
     public void removeLast() {
         currentColumn--;
         Tile t = getTile(currentRow, currentColumn);
         t.setValue(".");
+        cursor.setPosition(currentRow, currentColumn);
     }
 
     public void advanceRow() {
@@ -93,6 +98,8 @@ public class Board {
         for (Tile t : tiles) {
             t.render(sb);
         }
+
+        cursor.render(sb);
     }
 
     public float getX() {
@@ -118,5 +125,13 @@ public class Board {
     public Tile getTile(int row, int col) {
         int index = row * WORD_LENGTH + col;
         return tiles.get(index);
+    }
+
+    public float getTileX(int col) {
+        return renderX + col * TILE_PAD_SIZE;
+    }
+
+    public float getTileY(int row) {
+        return renderY + (rows - row - 1) * TILE_PAD_SIZE;
     }
 }

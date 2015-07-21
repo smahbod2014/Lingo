@@ -2,6 +2,7 @@ package com.koda.lingo;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -12,6 +13,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.koda.lingo.internal.GameState;
+import com.koda.lingo.internal.Resources;
 import com.koda.lingo.internal.StateManager;
 import com.koda.lingo.states.HighScoreState;
 import com.koda.lingo.states.MenuState;
@@ -32,7 +34,6 @@ public class Lingo extends ApplicationAdapter {
     public static ShapeRenderer debugSr;
     static OrthographicCamera camera;
     static BitmapFont font;
-    static Texture blankTile;
 
 	@Override
 	public void create() {
@@ -54,7 +55,8 @@ public class Lingo extends ApplicationAdapter {
         debugSr = new ShapeRenderer();
         debugSr.setProjectionMatrix(camera.combined);
 
-        blankTile = new Texture("tiles_" + TILE_SIZE + "/BlankTile_" + TILE_SIZE + ".png");
+        Resources.loadTexture("blank", "tiles_" + TILE_SIZE + "/BlankTile_" + TILE_SIZE + ".png");
+        Resources.loadTexture("cursor", "cursor_48.png");
     }
 
 	@Override
@@ -72,6 +74,7 @@ public class Lingo extends ApplicationAdapter {
         batch.dispose();
         font.dispose();
         debugSr.dispose();
+        Resources.dispose();
     }
 
     public static void log(String message) {
@@ -90,9 +93,5 @@ public class Lingo extends ApplicationAdapter {
 
     public static BitmapFont getFont() {
         return font;
-    }
-
-    public static Texture getBlankTile() {
-        return blankTile;
     }
 }
