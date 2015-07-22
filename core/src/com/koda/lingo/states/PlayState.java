@@ -14,7 +14,8 @@ public class PlayState extends GameState {
 
     public PlayState() {
         board = new Board(5, Board.PADDING, 200);
-        board.initializeRow("K");
+        board.setTargetWord("Class");
+        board.initializeRow();
 
         Gdx.input.setInputProcessor(new MyInputProcessor(this));
     }
@@ -25,7 +26,7 @@ public class PlayState extends GameState {
         else if (key == Input.Keys.BACKSPACE && board.getColumn() > 0)
             board.removeLast();
         else if (key == Input.Keys.ENTER) {
-            int boardState = board.submitGuess();
+            Board.BoardState boardState = board.submitGuess();
             Lingo.log("Board state: " + boardState);
         }
     }

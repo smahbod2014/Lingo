@@ -7,18 +7,17 @@ import com.koda.lingo.Lingo;
 import com.koda.lingo.internal.Resources;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Board {
 
     public static final int WORD_LENGTH = 5;
     public static final float PADDING = Lingo.TILE_SIZE / 10f;
     public static final float TILE_PAD_SIZE = Lingo.TILE_SIZE + PADDING * 2;
-    public static final int BOARD_VICTORY = 0;
-    public static final int BOARD_INCORRECT = 1;
-    public static final int BOARD_INVALID_GUESS = 2;
+
+    public enum BoardState { BOARD_VICTORY, BOARD_INCORRECT, BOARD_INVALID_GUESS, BOARD_DEFEAT }
 
     private ArrayList<Tile> tiles;
-    private ArrayList<MarkerTile> markerTiles;
     private Cursor cursor;
     private int rows;
     private int currentRow;
@@ -34,15 +33,32 @@ public class Board {
         renderY = y;
         currentRow = 0;
         cursor = new Cursor(this);
+        currentWord = "Kodas"; //temp!
     }
 
-    public void initializeRow(String letter) {
+    public void setTargetWord(String word) {
+        currentWord = word;
+    }
+
+    private Tile anyCorrectInColumn(int col) {
+        for (int i = 0; i < currentRow; i++) {
+            Tile t = getTile(i, col);
+            if (t.getMark() == Tile.Mark.CORRECT)
+                return t;
+        }
+        return null;
+    }
+
+    public void initializeRow() {
         for (int i = 0; i < WORD_LENGTH; i++) {
             currentColumn = i;
             Tile t = new Tile("", this);
             tiles.add(t);
+            Tile test = anyCorrectInColumn(i);
             if (i == 0)
-                t.setValue(letter);
+                t.setValue("" + currentWord.charAt(0));
+            else if (test != null)
+                t.setValue(test.getValue());
             else
                 t.setValue(".");
         }
@@ -52,6 +68,9 @@ public class Board {
     }
 
     public void addLetter(String letter) {
+        if (currentColumn == WORD_LENGTH)
+            return;
+
         Lingo.log("Adding letter " + letter);
         Tile t = getTile(currentRow, currentColumn);
         t.setValue(letter);
@@ -60,6 +79,9 @@ public class Board {
     }
 
     public void removeLast() {
+        if (currentColumn == 1)
+            return;
+
         currentColumn--;
         Tile t = getTile(currentRow, currentColumn);
         t.setValue(".");
@@ -77,25 +99,29 @@ public class Board {
         for (int i = offset; i < offset + WORD_LENGTH; i++) {
             result += tiles.get(i).getValue();
         }
-
         return result;
     }
 
-    public int submitGuess() {
+    public BoardState submitGuess() {
         for (int i = 0; i < WORD_LENGTH; i++) {
             String letter = getTile(currentRow, i).getValue();
             if (letter.equals(".")) {
-                return BOARD_INVALID_GUESS;
+                return BoardState.BOARD_INVALID_GUESS;
             }
         }
 
         String submission = getWord();
+        evaluateWord(submission);
         if (submission.equalsIgnoreCase(currentWord)) {
-            return BOARD_VICTORY;
+            return BoardState.BOARD_VICTORY;
         }
 
-        evaluateWord(submission);
-        return BOARD_INCORRECT;
+        advanceRow();
+        if (currentRow == rows)
+            return BoardState.BOARD_DEFEAT;
+
+        initializeRow();
+        return BoardState.BOARD_INCORRECT;
     }
 
     public void evaluateWord(String word) {
@@ -103,27 +129,63 @@ public class Board {
         String target = currentWord.substring(1).toLowerCase();
 
         //check for letters that are correct AND in the right spot
+        int colPosition = 1;
         for (int i = 0; i < word.length(); i++) {
             char a = word.charAt(i);
             char b = target.charAt(i);
+            Lingo.log("[Evaluate] Comparing '" + a + "' and '" + b + "'");
             if (a == b) {
-                markerTiles.add(new MarkerTile("correct", getTileX(i), getTileY(currentRow)));
+                Tile t = getTile(currentRow, colPosition);
+                t.setMark(Tile.Mark.CORRECT);
                 //TODO: guard against index out of bounds for the i + 1
                 word = word.substring(0, i) + word.substring(i + 1);
                 target = target.substring(0, i) + target.substring(i + 1);
                 i--;
             }
+
+            colPosition++;
         }
 
+        //check for letters that are correct but in the wrong spot
+        HashMap<Character, Integer> charMap = new HashMap<Character, Integer>();
+        for (int i = 0; i < word.length(); i++) {
+            char c = word.charAt(i);
+            if (charMap.get(c) == null) {
+                charMap.put(c, 1);
+            } else {
+                charMap.put(c, charMap.get(c) + 1);
+            }
+        }
 
+        for (int i = 1; i < WORD_LENGTH; i++) {
+            Tile t = getTile(currentRow, i);
+            if (t.getMark() != Tile.Mark.NONE)
+                continue;
+
+            //TODO: make Tile's value a char instead of a String
+            char c = t.getValue().toLowerCase().charAt(0);
+            if (charMap.get(c) == null)
+                continue;
+
+            int count = charMap.get(c);
+            if (target.contains("" + c)) {
+                t.setMark(Tile.Mark.WRONG);
+
+                if (count == 1) {
+                    charMap.remove(c);
+                } else {
+                    charMap.put(c, count - 1);
+                }
+            } else {
+                charMap.remove(c);
+            }
+        }
     }
 
     public void render(SpriteBatch sb) {
         if (Lingo.DEBUG) {
             Lingo.debugSr.setColor(Color.BLACK);
             Lingo.debugSr.begin(ShapeRenderer.ShapeType.Line);
-            //Lingo.debugSr.rect(renderX, renderY, WORD_LENGTH * TILE_PAD_SIZE + PADDING, rows * TILE_PAD_SIZE);
-
 
             for (int i = 0; i < 6; i++) {
                 float x = renderX + TILE_PAD_SIZE * i;
@@ -141,11 +203,6 @@ public class Board {
         for (Tile t : tiles) {
             t.render(sb);
         }
-
-        sb.begin();
-        sb.draw(Resources.getTexture("correct"), getTileX(1), getTileY(0), TILE_PAD_SIZE, TILE_PAD_SIZE);
-        sb.draw(Resources.getTexture("wrong"), getTileX(3), getTileY(0), TILE_PAD_SIZE, TILE_PAD_SIZE);
-        sb.end();
 
         cursor.render(sb);
     }
