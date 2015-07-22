@@ -57,6 +57,8 @@ public class Lingo extends ApplicationAdapter {
 
         Resources.loadTexture("blank", "tiles_" + TILE_SIZE + "/BlankTile_" + TILE_SIZE + ".png");
         Resources.loadTexture("cursor", "cursor_48.png");
+        Resources.loadTexture("correct", "correct_48.png");
+        Resources.loadTexture("wrong", "wrong_48.png");
     }
 
 	@Override

@@ -25,7 +25,8 @@ public class PlayState extends GameState {
         else if (key == Input.Keys.BACKSPACE && board.getColumn() > 0)
             board.removeLast();
         else if (key == Input.Keys.ENTER) {
-            //submit
+            int boardState = board.submitGuess();
+            Lingo.log("Board state: " + boardState);
         }
     }
 

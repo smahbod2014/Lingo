@@ -16,6 +16,9 @@ public class Cursor {
     }
 
     public void setPosition(int row, int col) {
+        if (col == Board.WORD_LENGTH)
+            col--;
+
         renderX = board.getTileX(col);
         renderY = board.getTileY(row);
     }
