@@ -13,11 +13,12 @@ public class PlayState extends GameState {
     Board board;
 
     public PlayState() {
-        board = new Board(5, Board.PADDING, 200);
+        board = new Board(5, Board.PADDING, 235);
         board.setTargetWord("Class");
         board.initializeRow();
 
         Gdx.input.setInputProcessor(new MyInputProcessor(this));
+        Gdx.input.setOnscreenKeyboardVisible(true);
     }
 
     public void typeKey(int key) {
@@ -27,7 +28,6 @@ public class PlayState extends GameState {
             board.removeLast();
         else if (key == Input.Keys.ENTER) {
             Board.BoardState boardState = board.submitGuess();
-            Lingo.log("Board state: " + boardState);
         }
     }
 
@@ -40,6 +40,7 @@ public class PlayState extends GameState {
     public void update(float dt) {
         if (Gdx.input.justTouched()) {
             Lingo.log("Touched at: " + Lingo.getTouchCoords());
+            Gdx.input.setOnscreenKeyboardVisible(true);
         }
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
@@ -59,12 +60,12 @@ public class PlayState extends GameState {
 
     @Override
     public void pause() {
-        super.pause();
+        Lingo.log("Play state paused");
     }
 
     @Override
     public void resume() {
-        super.resume();
+        Lingo.log("Play state resumed");
     }
 
     @Override

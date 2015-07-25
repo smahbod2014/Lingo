@@ -4,7 +4,6 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.koda.lingo.Lingo;
-import com.koda.lingo.internal.Resources;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -50,6 +49,8 @@ public class Board {
     }
 
     public void initializeRow() {
+        int startingColumn = 1;
+        boolean startColumnSet = false;
         for (int i = 0; i < WORD_LENGTH; i++) {
             currentColumn = i;
             Tile t = new Tile("", this);
@@ -59,11 +60,16 @@ public class Board {
                 t.setValue("" + currentWord.charAt(0));
             else if (test != null)
                 t.setValue(test.getValue());
-            else
+            else {
                 t.setValue(".");
+                if (!startColumnSet) {
+                    startingColumn = i;
+                    startColumnSet = true;
+                }
+            }
         }
 
-        currentColumn = 1;
+        currentColumn = startingColumn;
         cursor.setPosition(currentRow, currentColumn);
     }
 
@@ -71,7 +77,6 @@ public class Board {
         if (currentColumn == WORD_LENGTH)
             return;
 
-        Lingo.log("Adding letter " + letter);
         Tile t = getTile(currentRow, currentColumn);
         t.setValue(letter);
         currentColumn++;
@@ -133,11 +138,10 @@ public class Board {
         for (int i = 0; i < word.length(); i++) {
             char a = word.charAt(i);
             char b = target.charAt(i);
-            Lingo.log("[Evaluate] Comparing '" + a + "' and '" + b + "'");
             if (a == b) {
                 Tile t = getTile(currentRow, colPosition);
                 t.setMark(Tile.Mark.CORRECT);
-                //TODO: guard against index out of bounds for the i + 1
+
                 word = word.substring(0, i) + word.substring(i + 1);
                 target = target.substring(0, i) + target.substring(i + 1);
                 i--;
@@ -147,13 +151,24 @@ public class Board {
         }
 
         //check for letters that are correct but in the wrong spot
+        /*gets the number of occurrences of each letter
+        *ex: a: 2, s: 1...
+        */
         HashMap<Character, Integer> charMap = new HashMap<Character, Integer>();
+        HashMap<Character, Integer> targetCharMap = new HashMap<Character, Integer>();
         for (int i = 0; i < word.length(); i++) {
             char c = word.charAt(i);
             if (charMap.get(c) == null) {
                 charMap.put(c, 1);
             } else {
                 charMap.put(c, charMap.get(c) + 1);
+            }
+
+            c = target.charAt(i);
+            if (targetCharMap.get(c) == null) {
+                targetCharMap.put(c, 1);
+            } else {
+                targetCharMap.put(c, targetCharMap.get(c) + 1);
             }
         }
 
@@ -168,8 +183,13 @@ public class Board {
                 continue;
 
             int count = charMap.get(c);
-            if (target.contains("" + c)) {
+            if (targetCharMap.get(c) != null) {
                 t.setMark(Tile.Mark.WRONG);
+                int remaining = targetCharMap.get(c);
+                if (remaining == 1)
+                    targetCharMap.remove(c);
+                else
+                    targetCharMap.put(c, remaining - 1);
 
                 if (count == 1) {
                     charMap.remove(c);

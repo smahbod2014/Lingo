@@ -2,7 +2,6 @@ package com.koda.lingo;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -12,16 +11,11 @@ import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
-import com.koda.lingo.internal.GameState;
 import com.koda.lingo.internal.Resources;
 import com.koda.lingo.internal.StateManager;
 import com.koda.lingo.states.HighScoreState;
 import com.koda.lingo.states.MenuState;
 import com.koda.lingo.states.PlayState;
-
-import java.util.ArrayList;
-
-import javax.swing.plaf.nimbus.State;
 
 public class Lingo extends ApplicationAdapter {
 
@@ -44,7 +38,12 @@ public class Lingo extends ApplicationAdapter {
         batch.setProjectionMatrix(camera.combined);
 
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("calibri.ttf"));
-        font = generator.generateFont(46);
+        FreeTypeFontGenerator.FreeTypeFontParameter params = new FreeTypeFontGenerator.FreeTypeFontParameter();
+        params.size = 46;
+        params.genMipMaps = true;
+        params.magFilter = Texture.TextureFilter.Linear;
+        params.minFilter = Texture.TextureFilter.Linear;
+        font = generator.generateFont(params);
         generator.dispose();
 
         StateManager.addState(StateManager.MENU_STATE, new MenuState());
@@ -59,6 +58,7 @@ public class Lingo extends ApplicationAdapter {
         Resources.loadTexture("cursor", "cursor_48.png");
         Resources.loadTexture("correct", "correct_48.png");
         Resources.loadTexture("wrong", "wrong_48.png");
+        Resources.getTexture("blank").setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
     }
 
 	@Override
@@ -68,6 +68,21 @@ public class Lingo extends ApplicationAdapter {
 
         StateManager.update(Gdx.graphics.getDeltaTime());
         StateManager.render(batch);
+    }
+
+    @Override
+    public void resume() {
+        StateManager.resume();
+    }
+
+    @Override
+    public void pause() {
+        StateManager.pause();
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        StateManager.resize(width, height);
     }
 
     @Override
