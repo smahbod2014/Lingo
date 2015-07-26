@@ -111,4 +111,8 @@ public class Lingo extends ApplicationAdapter {
     public static BitmapFont getFont() {
         return font;
     }
+
+    public static int rand(int range) {
+        return (int) (Math.random() * range);
+    }
 }

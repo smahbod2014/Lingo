@@ -1,8 +1,10 @@
 package com.koda.lingo.logic;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Vector2;
 import com.koda.lingo.Lingo;
 
 import java.util.ArrayList;
@@ -35,8 +37,32 @@ public class Board {
         currentWord = "Kodas"; //temp!
     }
 
+    public void update(float dt) {
+        if (Gdx.input.justTouched()) {
+            Vector2 coords = Lingo.getTouchCoords();
+            coords.x -= renderX;
+            coords.y -= renderY;
+            int row = rows - (int) (coords.y / TILE_PAD_SIZE) - 1;
+            int col = (int) (coords.x / TILE_PAD_SIZE);
+            if (row == currentRow && col > 0 && col < WORD_LENGTH)
+                cursor.setPosition(row, col);
+        }
+    }
+
+    public void reset() {
+        tiles.clear();
+        currentColumn = 0;
+        currentRow = 0;
+    }
+
     public void setTargetWord(String word) {
+        word = word.toUpperCase();
         currentWord = word;
+        Lingo.log("[Board] Word was set to: " + word);
+    }
+
+    public String getTargetWord() {
+        return currentWord;
     }
 
     private Tile anyCorrectInColumn(int col) {
@@ -74,23 +100,20 @@ public class Board {
     }
 
     public void addLetter(String letter) {
-        if (currentColumn == WORD_LENGTH)
+        if (cursor.getCol() == WORD_LENGTH)
             return;
 
-        Tile t = getTile(currentRow, currentColumn);
+        Tile t = getTile(cursor.getRow(), cursor.getCol());
         t.setValue(letter);
-        currentColumn++;
-        cursor.setPosition(currentRow, currentColumn);
+        cursor.advance();
     }
 
     public void removeLast() {
-        if (currentColumn == 1)
-            return;
+        if (cursor.getCol() > 1)
+            cursor.backspace();
 
-        currentColumn--;
-        Tile t = getTile(currentRow, currentColumn);
+        Tile t = getTile(cursor.getRow(), cursor.getCol());
         t.setValue(".");
-        cursor.setPosition(currentRow, currentColumn);
     }
 
     public void advanceRow() {
