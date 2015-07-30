@@ -18,23 +18,23 @@ public class PlayState extends GameState {
 
     public static final long VICTORY_DELAY = 1000;
     public static final long DEFEAT_DELAY = 3000;
+    public static String[] wordBank;
+    public static String[] dictionary;
 
     Board board;
-    String[] words;
     boolean victoryMode = false;
 
     public PlayState() {
-        Gdx.input.setInputProcessor(new MyInputProcessor(this));
-        Gdx.input.setOnscreenKeyboardVisible(true);
-
         long now = System.currentTimeMillis();
         FileHandle file = Gdx.files.internal("wordlist.txt");
-        words = file.readString().replaceAll("\n", " ").split(" ");
+        dictionary = file.readString().replaceAll("[\\t\\n\\r]+", " ").split(" ");
+        file = Gdx.files.internal("wordbank.txt");
+        wordBank = file.readString().replaceAll("[\\t\\n\\r]+", " ").split(" ");
         long elapsed = System.currentTimeMillis() - now;
-        Lingo.log("[PlayState] Took " + elapsed / 1000.0 + " seconds to read the wordlist");
+        Lingo.log("[PlayState] Took " + elapsed / 1000.0 + " seconds to read the word bank and dictionary");
 
         board = new Board(5, Board.PADDING, 235);
-        board.setTargetWord(words[Lingo.rand(words.length)]);
+        board.setTargetWord(wordBank[Lingo.rand(wordBank.length)]);
         board.initializeRow();
     }
 
@@ -59,7 +59,9 @@ public class PlayState extends GameState {
 
     @Override
     public void show() {
-        super.show();
+        Gdx.input.setInputProcessor(new MyInputProcessor(this));
+        Gdx.input.setOnscreenKeyboardVisible(true);
+        Gdx.input.setCatchBackKey(true);
     }
 
     @Override
@@ -74,7 +76,8 @@ public class PlayState extends GameState {
         if (Timer.justFinished("victory") || Timer.justFinished("defeat")) {
             victoryMode = false;
             board.reset();
-            board.setTargetWord(words[Lingo.rand(words.length)]);
+            //TODO: Add bias against words farther down the list
+            board.setTargetWord(wordBank[Lingo.rand(wordBank.length)]);
             board.initializeRow();
         }
     }

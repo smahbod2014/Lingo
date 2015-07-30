@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.koda.lingo.Lingo;
+import com.koda.lingo.states.PlayState;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -152,7 +153,22 @@ public class Board {
         return BoardState.BOARD_INCORRECT;
     }
 
+    private boolean isInDictionary(String word) {
+        for (int i = 0; i < PlayState.dictionary.length; i++) {
+            if (PlayState.dictionary[i].equalsIgnoreCase(word))
+                return true;
+        }
+        return false;
+    }
+
     public void evaluateWord(String word) {
+        if (!isInDictionary(word)) {
+            for (int i = 0; i < WORD_LENGTH; i++) {
+                getTile(currentRow, i).setMark(Tile.Mark.INVALID);
+            }
+            return;
+        }
+
         word = word.substring(1).toLowerCase();
         String target = currentWord.substring(1).toLowerCase();
 

@@ -7,7 +7,7 @@ import com.koda.lingo.internal.Resources;
 
 public class Tile {
 
-    public enum Mark { NONE, CORRECT, WRONG }
+    public enum Mark { NONE, CORRECT, WRONG, INVALID }
 
     private static GlyphLayout layout = new GlyphLayout();
 
@@ -69,6 +69,9 @@ public class Tile {
                 break;
             case WRONG:
                 sb.draw(Resources.getTexture("wrong"), board.getTileX(col), board.getTileY(row), Board.TILE_PAD_SIZE, Board.TILE_PAD_SIZE);
+                break;
+            case INVALID:
+                sb.draw(Resources.getTexture("invalid"), board.getTileX(col), board.getTileY(row), Board.TILE_PAD_SIZE, Board.TILE_PAD_SIZE);
                 break;
         }
 

@@ -2,6 +2,7 @@ package com.koda.lingo;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -49,7 +50,7 @@ public class Lingo extends ApplicationAdapter {
         StateManager.addState(StateManager.MENU_STATE, new MenuState());
         StateManager.addState(StateManager.PLAY_STATE, new PlayState());
         StateManager.addState(StateManager.HIGH_SCORE_STATE, new HighScoreState());
-        StateManager.setState(StateManager.PLAY_STATE);
+        StateManager.setState(StateManager.MENU_STATE);
 
         debugSr = new ShapeRenderer();
         debugSr.setProjectionMatrix(camera.combined);
@@ -58,6 +59,7 @@ public class Lingo extends ApplicationAdapter {
         Resources.loadTexture("cursor", "cursor_48.png");
         Resources.loadTexture("correct", "correct_48.png");
         Resources.loadTexture("wrong", "wrong_48.png");
+        Resources.loadTexture("invalid", "invalid_48.png");
         Resources.getTexture("blank").setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
     }
 
