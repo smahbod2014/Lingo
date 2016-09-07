@@ -2,6 +2,7 @@ package com.koda.lingo.logic;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
@@ -27,15 +28,22 @@ public class Board {
     private String currentWord;
     private float renderX;
     private float renderY;
+    private PlayState.PlayMode mode;
+    private ArrayList<Integer> grantedPositions;
 
-    public Board(int rows, float x, float y) {
+    //hard mode variables
+    private ArrayList<Marking> markings = new ArrayList<Marking>();
+
+    public Board(int rows, float x, float y, PlayState.PlayMode mode) {
         this.rows = rows;
         tiles = new ArrayList<Tile>();
+        grantedPositions = new ArrayList<Integer>();
         renderX = x;
         renderY = y;
         currentRow = 0;
         cursor = new Cursor(this);
-        currentWord = "Kodas"; //temp!
+        currentWord = "";
+        this.mode = mode;
     }
 
     public void update(float dt) {
@@ -59,7 +67,19 @@ public class Board {
     public void setTargetWord(String word) {
         word = word.toUpperCase();
         currentWord = word;
-        Lingo.log("[Board] Word was set to: " + word);
+        //Lingo.log("[Board] Word was set to: " + currentWord);
+
+        if (mode.isMarathon()) {
+            grantedPositions.clear();
+            grantedPositions.add(Lingo.rand(4) + 1);
+            //Lingo.log("Granted position is " + grantedPosition);
+        }
+
+        if (mode.isHardMode()) {
+            markings.clear();
+        }
+
+        initializeRow();
     }
 
     public String getTargetWord() {
@@ -96,8 +116,98 @@ public class Board {
             }
         }
 
-        currentColumn = startingColumn;
-        cursor.setPosition(currentRow, currentColumn);
+        if (mode.isMarathon()) {
+            for (Integer i : grantedPositions) {
+                getTile(currentRow, i).setValue("" + currentWord.charAt(i));
+
+                /*if (i <= startingColumn) {
+                    startingColumn = i + 1;
+                }*/
+            }
+        }
+
+        //currentColumn = startingColumn;
+        //cursor.setPosition(currentRow, currentColumn);
+        advanceCursorFarthest();
+    }
+
+    public boolean doBonusLetter() {
+        int numCorrect = 0;
+        for (int i = 1; i < WORD_LENGTH; i++)
+            if (anyCorrectInColumn(i) != null || isGranted(i))
+                numCorrect++;
+
+        Lingo.log("numCorrect = " + numCorrect);
+        if (numCorrect >= WORD_LENGTH - 1)
+            return false;
+
+        resetRow();
+
+        for (int i = 1; i < WORD_LENGTH; i++) {
+            Tile t = getTile(currentRow, i);
+            Lingo.log("Attempting to assign bonus letter to column " + i);
+            if (canAssignBonusLetter(t, i)) {
+                t.setValue("" + currentWord.charAt(i));
+                t.setMark(Tile.Mark.BONUS);
+                grantedPositions.add(i);
+                advanceCursorFarthest();
+                Lingo.log("Successfully assigned bonus letter to column " + i);
+                return true;
+            }
+        }
+
+        Lingo.log("Failed to apply bonus letter");
+        //failed to assign a bonus letter
+        return false;
+    }
+
+    private boolean canAssignBonusLetter(Tile t, int col) {
+        //has a bonus letter already been assigned in this column?
+        if (isGranted(col)) {
+            Lingo.log("Already have something granted in column " + col);
+            return false;
+        }
+
+        //have we already gotten a correct tile in this column?
+        if (mode == PlayState.PlayMode.MARATHON && anyCorrectInColumn(col) != null) {
+            Lingo.log("Already have a correct tile in column " + col);
+            return false;
+        }
+
+        if (t.getValue().equals("."))
+            Lingo.log("Success, can assign bonus letter to column " + col);
+
+        return t.getValue().equals(".");
+    }
+
+    public void resetRow() {
+        for (int i = 1; i < WORD_LENGTH; i++) {
+            Tile t = anyCorrectInColumn(i);
+            if (t != null) {
+                getTile(currentRow, i).setValue(t.getValue());
+            }
+            else if (isGranted(i)) {
+                getTile(currentRow, i).setValue("" + currentWord.charAt(i));
+            }
+            else {
+                getTile(currentRow, i).setValue(".");
+            }
+        }
+
+        for (int i = 1; i < grantedPositions.size(); i++) {
+            getTile(currentRow, grantedPositions.get(i)).setMark(Tile.Mark.BONUS);
+        }
+
+        advanceCursorFarthest();
+    }
+
+    private boolean isGranted(int position) {
+        for (int i = 0; i < grantedPositions.size(); i++) {
+            if (grantedPositions.get(i) == position) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void addLetter(String letter) {
@@ -115,6 +225,20 @@ public class Board {
 
         Tile t = getTile(cursor.getRow(), cursor.getCol());
         t.setValue(".");
+        if (t.getMark() == Tile.Mark.BONUS)
+            t.setMark(Tile.Mark.NONE);
+    }
+
+    public void advanceCursorFarthest() {
+        for (int i = 1; i < WORD_LENGTH; i++) {
+            Tile t = getTile(currentRow, i);
+            if (t.getValue().equals(".")) {
+                currentColumn = i;
+                cursor.setPosition(currentRow, currentColumn);
+                Lingo.log("Setting cursor to column " + i);
+                return;
+            }
+        }
     }
 
     public void advanceRow() {
@@ -239,6 +363,30 @@ public class Board {
                 charMap.remove(c);
             }
         }
+
+        if (mode.isHardMode()) {
+            int numRight = 0;
+            int numWrong = 0;
+
+            for (int i = 1; i < WORD_LENGTH; i++) {
+                Tile t = getTile(currentRow, i);
+                if (t.getMark() == Tile.Mark.WRONG) {
+                    numWrong++;
+                }
+                if (t.getMark() == Tile.Mark.CORRECT) {
+                    numRight++;
+                }
+                t.setMark(Tile.Mark.NONE);
+            }
+
+            markings.add(new Marking(numWrong, numRight, getTileX(WORD_LENGTH - 1) + TILE_PAD_SIZE + 2f,
+                    getTileY(currentRow) + TILE_PAD_SIZE * 0.75f));
+
+            for (int i = 1; i < grantedPositions.size(); i++) {
+                if (getTile(currentRow, grantedPositions.get(i)).getValue().equals("" + currentWord.charAt(grantedPositions.get(i))))
+                    getTile(currentRow, grantedPositions.get(i)).setMark(Tile.Mark.BONUS);
+            }
+        }
     }
 
     public void render(SpriteBatch sb) {
@@ -264,6 +412,12 @@ public class Board {
         }
 
         cursor.render(sb);
+
+        if (mode.isHardMode()) {
+            for (Marking m : markings) {
+                m.render(sb);
+            }
+        }
     }
 
     public float getX() {

@@ -13,6 +13,10 @@ public class StateManager {
     private static HashMap<Integer, GameState> allStates = new HashMap<Integer, GameState>();
     private static GameState gameState;
 
+    public static GameState getGameState(int code) {
+        return allStates.get(code);
+    }
+
     public static void addState(int code, GameState state) {
         allStates.put(code, state);
     }

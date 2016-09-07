@@ -2,7 +2,7 @@ package com.koda.lingo;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Preferences;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -16,7 +16,6 @@ import com.koda.lingo.internal.Resources;
 import com.koda.lingo.internal.StateManager;
 import com.koda.lingo.states.HighScoreState;
 import com.koda.lingo.states.MenuState;
-import com.koda.lingo.states.PlayState;
 
 public class Lingo extends ApplicationAdapter {
 
@@ -28,7 +27,10 @@ public class Lingo extends ApplicationAdapter {
 	SpriteBatch batch;
     public static ShapeRenderer debugSr;
     static OrthographicCamera camera;
-    static BitmapFont font;
+    static BitmapFont letterFont;
+    static BitmapFont timerFont;
+    static BitmapFont bonusFont;
+    static BitmapFont markingFont;
 
 	@Override
 	public void create() {
@@ -44,11 +46,18 @@ public class Lingo extends ApplicationAdapter {
         params.genMipMaps = true;
         params.magFilter = Texture.TextureFilter.Linear;
         params.minFilter = Texture.TextureFilter.Linear;
-        font = generator.generateFont(params);
+        letterFont = generator.generateFont(params);
+        params.borderWidth = 1.25f;
+        timerFont = generator.generateFont(params);
+        params.size = 24;
+        bonusFont = generator.generateFont(params);
+        params.size = 36;
+        params.borderColor = Color.BLACK;
+        params.borderWidth = 1.5f;
+        markingFont = generator.generateFont(params);
         generator.dispose();
 
         StateManager.addState(StateManager.MENU_STATE, new MenuState());
-        StateManager.addState(StateManager.PLAY_STATE, new PlayState());
         StateManager.addState(StateManager.HIGH_SCORE_STATE, new HighScoreState());
         StateManager.setState(StateManager.MENU_STATE);
 
@@ -59,6 +68,7 @@ public class Lingo extends ApplicationAdapter {
         Resources.loadTexture("cursor", "cursor_48.png");
         Resources.loadTexture("correct", "correct_48.png");
         Resources.loadTexture("wrong", "wrong_48.png");
+        Resources.loadTexture("bonus", "bonus_48.png");
         Resources.loadTexture("invalid", "invalid_48.png");
         Resources.getTexture("blank").setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
     }
@@ -91,7 +101,10 @@ public class Lingo extends ApplicationAdapter {
     public void dispose() {
         StateManager.disposeAll();
         batch.dispose();
-        font.dispose();
+        letterFont.dispose();
+        timerFont.dispose();
+        bonusFont.dispose();
+        markingFont.dispose();
         debugSr.dispose();
         Resources.dispose();
     }
@@ -110,8 +123,20 @@ public class Lingo extends ApplicationAdapter {
         return new Vector2(mouse.x, mouse.y);
     }
 
-    public static BitmapFont getFont() {
-        return font;
+    public static BitmapFont getLetterFont() {
+        return letterFont;
+    }
+
+    public static BitmapFont getTimerFont() {
+        return timerFont;
+    }
+
+    public static BitmapFont getBonusFont() {
+        return bonusFont;
+    }
+
+    public static BitmapFont getMarkingFont() {
+        return markingFont;
     }
 
     public static int rand(int range) {
