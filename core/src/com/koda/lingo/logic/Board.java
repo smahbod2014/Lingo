@@ -282,6 +282,13 @@ public class Board {
             if (PlayState.dictionary[i].equalsIgnoreCase(word))
                 return true;
         }
+
+        //sometimes words can be in the word bank but not the dictionary, like "Gonna", but they should still be valid
+        for (int i = 0; i < PlayState.wordBank.length; i++) {
+            if (PlayState.wordBank[i].equalsIgnoreCase(word))
+                return true;
+        }
+
         return false;
     }
 
