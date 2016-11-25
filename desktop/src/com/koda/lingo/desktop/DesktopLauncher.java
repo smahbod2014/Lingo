@@ -1,11 +1,13 @@
 package com.koda.lingo.desktop;
 
 import com.badlogic.gdx.Files;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import com.koda.lingo.Lingo;
+import com.koda.lingo.PlatformAdapter;
 
-public class DesktopLauncher {
+public class DesktopLauncher implements PlatformAdapter {
 	public static void main(String[] arg) {
 		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
 		config.width = Lingo.SCREEN_WIDTH;
@@ -13,6 +15,13 @@ public class DesktopLauncher {
         config.title = "Lingo";
         config.resizable = false;
         config.addIcon("Tile_32_L.png", Files.FileType.Internal);
-		new LwjglApplication(new Lingo(), config);
+        Lingo lingo = new Lingo();
+        lingo.setPlatformAdapter(new DesktopLauncher());
+		new LwjglApplication(lingo, config);
 	}
+
+    @Override
+    public void displayMessage(String message) {
+        Gdx.app.log("DesktopLauncher", message);
+    }
 }

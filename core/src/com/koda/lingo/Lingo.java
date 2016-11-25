@@ -31,6 +31,7 @@ public class Lingo extends ApplicationAdapter {
     static BitmapFont timerFont;
     static BitmapFont bonusFont;
     static BitmapFont markingFont;
+    static PlatformAdapter platformAdapter;
 
 	@Override
 	public void create() {
@@ -141,5 +142,13 @@ public class Lingo extends ApplicationAdapter {
 
     public static int rand(int range) {
         return (int) (Math.random() * range);
+    }
+
+    public void setPlatformAdapter(PlatformAdapter adapter) {
+        Lingo.platformAdapter = adapter;
+    }
+
+    public static void toast(String message) {
+        platformAdapter.displayMessage(message);
     }
 }
