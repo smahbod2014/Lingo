@@ -2,7 +2,6 @@ package com.koda.lingo.logic;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
@@ -14,13 +13,14 @@ import java.util.HashMap;
 
 public class Board {
 
-    public static final int WORD_LENGTH = 5;
-    public static final float PADDING = Lingo.TILE_SIZE / 10f;
-    public static final float TILE_PAD_SIZE = Lingo.TILE_SIZE + PADDING * 2;
+    public final float padding;
+    public final float tilePadSize;
+    private final float baseTileSize;
 
-    public enum BoardState { BOARD_VICTORY, BOARD_INCORRECT, BOARD_INVALID_GUESS, BOARD_DEFEAT }
 
+    public enum BoardState { BOARD_VICTORY, BOARD_INCORRECT, BOARD_INVALID_GUESS, BOARD_DEFEAT;}
     private ArrayList<Tile> tiles;
+
     private Cursor cursor;
     private int rows;
     private int currentRow;
@@ -30,11 +30,12 @@ public class Board {
     private float renderY;
     private PlayState.PlayMode mode;
     private ArrayList<Integer> grantedPositions;
+    private int wordLength;
 
     //hard mode variables
     private ArrayList<Marking> markings = new ArrayList<Marking>();
 
-    public Board(int rows, float x, float y, PlayState.PlayMode mode) {
+    public Board(int rows, float x, float y, PlayState.PlayMode mode, int numLetters) {
         this.rows = rows;
         tiles = new ArrayList<Tile>();
         grantedPositions = new ArrayList<Integer>();
@@ -44,6 +45,19 @@ public class Board {
         cursor = new Cursor(this);
         currentWord = "";
         this.mode = mode;
+        this.wordLength = numLetters;
+
+        baseTileSize = 240f / wordLength;
+        padding = baseTileSize / 10f;
+        tilePadSize = baseTileSize + padding * 2;
+    }
+
+    public float getTileSize() {
+        return baseTileSize;
+    }
+
+    public float getReduction() {
+        return baseTileSize / 48f;
     }
 
     public void update(float dt) {
@@ -51,11 +65,15 @@ public class Board {
             Vector2 coords = Lingo.getTouchCoords();
             coords.x -= renderX;
             coords.y -= renderY;
-            int row = rows - (int) (coords.y / TILE_PAD_SIZE) - 1;
-            int col = (int) (coords.x / TILE_PAD_SIZE);
-            if (row == currentRow && col > 0 && col < WORD_LENGTH)
+            int row = rows - (int) (coords.y / tilePadSize) - 1;
+            int col = (int) (coords.x / tilePadSize);
+            if (row == currentRow && col > 0 && col < wordLength)
                 cursor.setPosition(row, col);
         }
+    }
+
+    public int getWordLength() {
+        return wordLength;
     }
 
     public void reset() {
@@ -67,7 +85,7 @@ public class Board {
     public void setTargetWord(String word) {
         word = word.toUpperCase();
         currentWord = word;
-        //Lingo.log("[Board] Word was set to: " + currentWord);
+        Lingo.log("[Board] Word was set to: " + currentWord);
 
         if (mode.isMarathon()) {
             grantedPositions.clear();
@@ -98,7 +116,7 @@ public class Board {
     public void initializeRow() {
         int startingColumn = 1;
         boolean startColumnSet = false;
-        for (int i = 0; i < WORD_LENGTH; i++) {
+        for (int i = 0; i < wordLength; i++) {
             currentColumn = i;
             Tile t = new Tile("", this);
             tiles.add(t);
@@ -133,17 +151,17 @@ public class Board {
 
     public boolean doBonusLetter() {
         int numCorrect = 0;
-        for (int i = 1; i < WORD_LENGTH; i++)
+        for (int i = 1; i < wordLength; i++)
             if (anyCorrectInColumn(i) != null || isGranted(i))
                 numCorrect++;
 
         Lingo.log("numCorrect = " + numCorrect);
-        if (numCorrect >= WORD_LENGTH - 1)
+        if (numCorrect >= wordLength - 1)
             return false;
 
         resetRow();
 
-        for (int i = 1; i < WORD_LENGTH; i++) {
+        for (int i = 1; i < wordLength; i++) {
             Tile t = getTile(currentRow, i);
             Lingo.log("Attempting to assign bonus letter to column " + i);
             if (canAssignBonusLetter(t, i)) {
@@ -181,7 +199,7 @@ public class Board {
     }
 
     public void resetRow() {
-        for (int i = 1; i < WORD_LENGTH; i++) {
+        for (int i = 1; i < wordLength; i++) {
             Tile t = anyCorrectInColumn(i);
             if (t != null) {
                 getTile(currentRow, i).setValue(t.getValue());
@@ -211,7 +229,7 @@ public class Board {
     }
 
     public void addLetter(String letter) {
-        if (cursor.getCol() == WORD_LENGTH)
+        if (cursor.getCol() == wordLength)
             return;
 
         Tile t = getTile(cursor.getRow(), cursor.getCol());
@@ -230,7 +248,7 @@ public class Board {
     }
 
     public void advanceCursorFarthest() {
-        for (int i = 1; i < WORD_LENGTH; i++) {
+        for (int i = 1; i < wordLength; i++) {
             Tile t = getTile(currentRow, i);
             if (t.getValue().equals(".")) {
                 currentColumn = i;
@@ -248,15 +266,15 @@ public class Board {
 
     public String getWord() {
         String result = "";
-        int offset = currentRow * WORD_LENGTH;
-        for (int i = offset; i < offset + WORD_LENGTH; i++) {
+        int offset = currentRow * wordLength;
+        for (int i = offset; i < offset + wordLength; i++) {
             result += tiles.get(i).getValue();
         }
         return result;
     }
 
     public BoardState submitGuess() {
-        for (int i = 0; i < WORD_LENGTH; i++) {
+        for (int i = 0; i < wordLength; i++) {
             String letter = getTile(currentRow, i).getValue();
             if (letter.equals(".")) {
                 return BoardState.BOARD_INVALID_GUESS;
@@ -294,7 +312,7 @@ public class Board {
 
     public void evaluateWord(String word) {
         if (!isInDictionary(word)) {
-            for (int i = 0; i < WORD_LENGTH; i++) {
+            for (int i = 0; i < wordLength; i++) {
                 getTile(currentRow, i).setMark(Tile.Mark.INVALID);
             }
             return;
@@ -342,7 +360,7 @@ public class Board {
             }
         }
 
-        for (int i = 1; i < WORD_LENGTH; i++) {
+        for (int i = 1; i < wordLength; i++) {
             Tile t = getTile(currentRow, i);
             if (t.getMark() != Tile.Mark.NONE)
                 continue;
@@ -375,7 +393,7 @@ public class Board {
             int numRight = 0;
             int numWrong = 0;
 
-            for (int i = 1; i < WORD_LENGTH; i++) {
+            for (int i = 1; i < wordLength; i++) {
                 Tile t = getTile(currentRow, i);
                 if (t.getMark() == Tile.Mark.WRONG) {
                     numWrong++;
@@ -386,8 +404,8 @@ public class Board {
                 t.setMark(Tile.Mark.NONE);
             }
 
-            markings.add(new Marking(numWrong, numRight, getTileX(WORD_LENGTH - 1) + TILE_PAD_SIZE + 2f,
-                    getTileY(currentRow) + TILE_PAD_SIZE * 0.75f));
+            markings.add(new Marking(numWrong, numRight, getTileX(wordLength - 1) + tilePadSize + 2f,
+                    getTileY(currentRow) + tilePadSize * 0.75f));
 
             for (int i = 1; i < grantedPositions.size(); i++) {
                 if (getTile(currentRow, grantedPositions.get(i)).getValue().equals("" + currentWord.charAt(grantedPositions.get(i))))
@@ -401,14 +419,14 @@ public class Board {
             Lingo.debugSr.setColor(Color.BLACK);
             Lingo.debugSr.begin(ShapeRenderer.ShapeType.Line);
 
-            for (int i = 0; i < 6; i++) {
-                float x = renderX + TILE_PAD_SIZE * i;
+            for (int i = 0; i < wordLength + 1; i++) {
+                float x = renderX + tilePadSize * i;
                 Lingo.debugSr.line(x, renderY, x, getHeight() + renderY);
             }
 
-            for (int i = 0; i < 6; i++) {
-                float y = i * TILE_PAD_SIZE + renderY;
-                Lingo.debugSr.line(renderX, y, WORD_LENGTH * TILE_PAD_SIZE + renderX, y);
+            for (int i = 0; i <= 5; i++) {
+                float y = i * tilePadSize + renderY;
+                Lingo.debugSr.line(renderX, y, wordLength * tilePadSize + renderX, y);
             }
 
             Lingo.debugSr.end();
@@ -444,19 +462,19 @@ public class Board {
     }
 
     public float getHeight() {
-        return rows * TILE_PAD_SIZE;
+        return rows * tilePadSize;
     }
 
     public Tile getTile(int row, int col) {
-        int index = row * WORD_LENGTH + col;
+        int index = row * wordLength + col;
         return tiles.get(index);
     }
 
     public float getTileX(int col) {
-        return renderX + col * TILE_PAD_SIZE;
+        return renderX + col * tilePadSize;
     }
 
     public float getTileY(int row) {
-        return renderY + (rows - row - 1) * TILE_PAD_SIZE;
+        return renderY + (rows - row - 1) * tilePadSize;
     }
 }

@@ -942,7 +942,6 @@ cable
 peach
 ruins
 rally
-schwa
 lambs
 sells
 cools
@@ -1149,7 +1148,6 @@ cloak
 onion
 clams
 scrap
-didst
 couch
 codes
 fails
@@ -1184,7 +1182,6 @@ modes
 debts
 realm
 glove
-rayon
 swims
 poked
 stray

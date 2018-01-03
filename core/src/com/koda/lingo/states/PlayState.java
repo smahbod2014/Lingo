@@ -32,18 +32,11 @@ public class PlayState extends GameState {
     public static String[] wordBank;
     public static String[] dictionary;
     {
-        long now = System.currentTimeMillis();
-        FileHandle file = Gdx.files.internal("wordlist.txt");
-        dictionary = file.readString().replaceAll("[\\t\\n\\r]+", " ").split(" ");
-        file = Gdx.files.internal("wordbank.txt");
-        wordBank = file.readString().replaceAll("[\\t\\n\\r]+", " ").split(" ");
-        long elapsed = System.currentTimeMillis() - now;
-        Lingo.log("[PlayState] Took " + elapsed / 1000.0 + " seconds to read the word bank and dictionary");
+
     }
 
     Board board;
     boolean victoryMode = false;
-    int limit;
     PlayMode mode;
 
     //marathon modes
@@ -51,14 +44,23 @@ public class PlayState extends GameState {
     private int time;
     private int marathonScore;
 
-    public PlayState(PlayMode mode, MenuState.Obscurity obscurity) {
+    private int numLetters;
+
+    public PlayState(PlayMode mode, @Deprecated MenuState.Obscurity obscurity, int numLetters) {
         Lingo.log("PlayState entered. " + mode.toString() + " mode selected. Obscurity is " + obscurity.toString());
-        limit = obscurity.limit;
-        if (limit == -1)
-            limit = wordBank.length;
-        board = new Board(5, Board.PADDING, 235, mode);
-        board.setTargetWord(wordBank[Lingo.rand(limit)]);
+
+        long now = System.currentTimeMillis();
+        FileHandle file = Gdx.files.internal("dictionary.txt");
+        dictionary = file.readString().split("\\s+");
+        file = Gdx.files.internal("wordbank-" + numLetters + ".txt");
+        wordBank = file.readString().split("\\s+");
+        long elapsed = System.currentTimeMillis() - now;
+        Lingo.log("[PlayState] Took " + elapsed / 1000.0 + " seconds to read the word bank and dictionary");
+
+        board = new Board(5, 5, 245, mode, numLetters);
+        board.setTargetWord(wordBank[Lingo.rand(wordBank.length)]);
         this.mode = mode;
+        this.numLetters = numLetters;
 
         if (mode.isMarathon()) {
             bonusLetters = BONUS_LETTERS;
@@ -71,7 +73,7 @@ public class PlayState extends GameState {
         if (Timer.running("victory") || Timer.running("defeat"))
             return;
 
-        if (key >= Input.Keys.A && key <= Input.Keys.Z && board.getColumn() < Board.WORD_LENGTH)
+        if (key >= Input.Keys.A && key <= Input.Keys.Z && board.getColumn() < numLetters)
             board.addLetter("" + (char) (key + 36));
         else if (key == Input.Keys.BACKSPACE && board.getColumn() > 0)
             board.removeLast();
@@ -114,7 +116,7 @@ public class PlayState extends GameState {
             victoryMode = false;
             board.reset();
             //TODO: Add bias against words farther down the list
-            board.setTargetWord(wordBank[Lingo.rand(limit)]);
+            board.setTargetWord(wordBank[Lingo.rand(wordBank.length)]);
             //board.initializeRow();
         }
 
@@ -129,6 +131,10 @@ public class PlayState extends GameState {
                     StateManager.setState(menuState);
                 }
             }
+        }
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.LEFT)) {
+            StateManager.setState(new MenuState());
         }
     }
 

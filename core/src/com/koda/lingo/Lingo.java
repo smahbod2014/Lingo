@@ -21,7 +21,9 @@ public class Lingo extends ApplicationAdapter {
 
     public static final int SCREEN_WIDTH = 337;
     public static final int SCREEN_HEIGHT = 600;
+    @Deprecated
     public static final int TILE_SIZE = 48;
+    private static final int TILE_RESOLUTION = 48;
     public static final boolean DEBUG = true;
 
 	SpriteBatch batch;
@@ -65,7 +67,7 @@ public class Lingo extends ApplicationAdapter {
         debugSr = new ShapeRenderer();
         debugSr.setProjectionMatrix(camera.combined);
 
-        Resources.loadTexture("blank", "tiles_" + TILE_SIZE + "/BlankTile_" + TILE_SIZE + ".png");
+        Resources.loadTexture("blank", String.format("tiles_%d/BlankTile_%d.png", TILE_RESOLUTION, TILE_RESOLUTION));
         Resources.loadTexture("cursor", "cursor_48.png");
         Resources.loadTexture("correct", "correct_48.png");
         Resources.loadTexture("wrong", "wrong_48.png");

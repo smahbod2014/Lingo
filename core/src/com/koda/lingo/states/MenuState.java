@@ -1,35 +1,34 @@
 package com.koda.lingo.states;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.ButtonGroup;
 import com.badlogic.gdx.scenes.scene2d.ui.CheckBox;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.ScalingViewport;
-import com.badlogic.gdx.utils.viewport.Viewport;
+import com.google.common.collect.ImmutableList;
 import com.koda.lingo.Lingo;
 import com.koda.lingo.internal.GameState;
 import com.koda.lingo.internal.StateManager;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class MenuState extends GameState {
 
-    public enum MenuMode { MAIN_MENU, PLAY_MODE_SELECTION, SETTINGS_MENU, GAME_OVER }
+    public enum MenuMode { MAIN_MENU, PLAY_MODE_SELECTION, LETTER_AMOUNT_SELECTION, SETTINGS_MENU, GAME_OVER }
     public enum Obscurity {
-        EASY(1250), NORMAL(3000), HARD(-1);
+        EASY(1500), NORMAL(3000), HARD(-1);
         public int limit;
         private Obscurity(int limit) {
             this.limit = limit;
@@ -48,6 +47,7 @@ public class MenuState extends GameState {
     private ButtonGroup<CheckBox> checkBoxButtonGroup;
 
     private Obscurity obscurity = Obscurity.EASY;
+    private PlayState.PlayMode playMode;
     private String word;
     private int score;
 
@@ -94,7 +94,7 @@ public class MenuState extends GameState {
             case MAIN_MENU:
                 table.clear();
 
-                TextButton playButton = new TextButton("Play", skin);
+                final TextButton playButton = new TextButton("Play", skin);
                 TextButton highScoreButton = new TextButton("High Scores", skin);
                 TextButton settingsButton = new TextButton("Settings", skin);
                 TextButton quitButton = new TextButton("Quit", skin);
@@ -156,28 +156,32 @@ public class MenuState extends GameState {
                 regularButton.addListener(new ClickListener() {
                     @Override
                     public void clicked(InputEvent event, float x, float y) {
-                        StateManager.setState(new PlayState(PlayState.PlayMode.REGULAR, getObscurity()));
+                        playMode = PlayState.PlayMode.REGULAR;
+                        setup(MenuMode.LETTER_AMOUNT_SELECTION);
                     }
                 });
 
                 regularMthnButton.addListener(new ClickListener() {
                     @Override
                     public void clicked(InputEvent event, float x, float y) {
-                        StateManager.setState(new PlayState(PlayState.PlayMode.MARATHON, getObscurity()));
+                        playMode = PlayState.PlayMode.MARATHON;
+                        setup(MenuMode.LETTER_AMOUNT_SELECTION);
                     }
                 });
 
                 hardButton.addListener(new ClickListener() {
                     @Override
                     public void clicked(InputEvent event, float x, float y) {
-                        StateManager.setState(new PlayState(PlayState.PlayMode.HARD, getObscurity()));
+                        playMode = PlayState.PlayMode.HARD;
+                        setup(MenuMode.LETTER_AMOUNT_SELECTION);
                     }
                 });
 
                 hardMthnButton.addListener(new ClickListener() {
                     @Override
                     public void clicked(InputEvent event, float x, float y) {
-                        StateManager.setState(new PlayState(PlayState.PlayMode.HARD_MARATHON, getObscurity()));
+                        playMode = PlayState.PlayMode.HARD_MARATHON;
+                        setup(MenuMode.LETTER_AMOUNT_SELECTION);
                     }
                 });
                 break;
@@ -206,6 +210,41 @@ public class MenuState extends GameState {
                 table.add(normalWords).align(Align.left).padBottom(10).colspan(10).row();
                 table.add(allWords).align(Align.left).padBottom(10).colspan(10).row();
                 table.add(menuButton).colspan(10).fill();
+                break;
+            case LETTER_AMOUNT_SELECTION:
+                table.clear();
+
+                TextButton backButton = new TextButton("Back", skin);
+                backButton.addListener(new ClickListener() {
+                    @Override
+                    public void clicked(InputEvent event, float x, float y) {
+                        setup(MenuMode.PLAY_MODE_SELECTION);
+                    }
+                });
+
+                List<TextButton> letterOptions = ImmutableList.of(
+                        new TextButton("5-letter words", skin),
+                        new TextButton("6-letter words", skin),
+                        new TextButton("7-letter words", skin),
+                        new TextButton("8-letter words", skin));
+
+                for (int i = 5; i <= 8; i++) {
+                    final int numLetters = i;
+                    letterOptions.get(i - 5).addListener(new ClickListener() {
+                        @Override
+                        public void clicked(InputEvent event, float x, float y) {
+                            StateManager.setState(new PlayState(playMode, getObscurity(), numLetters));
+                        }
+                    });
+                }
+
+                table.setFillParent(true);
+                table.center();
+                table.add(new Label("How many letters per word?", skin)).padBottom(50).row();
+                for (TextButton button: letterOptions) {
+                    table.add(button).padBottom(10).colspan(10).fill().row();
+                }
+                table.add(backButton).colspan(10).fill();
                 break;
             case GAME_OVER:
                 table.clear();

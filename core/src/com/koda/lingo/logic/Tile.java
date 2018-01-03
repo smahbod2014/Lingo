@@ -24,8 +24,8 @@ public class Tile {
     public Tile(String value, Board board) {
         this.value = value;
         this.board = board;
-        renderX = board.getX() + board.getColumn() * Board.TILE_PAD_SIZE + Board.PADDING;
-        renderY = board.getY() + board.getHeight() - Board.TILE_PAD_SIZE * (board.getRow() + 1) + Board.PADDING;
+        renderX = board.getX() + board.getColumn() * board.tilePadSize + board.padding;
+        renderY = board.getY() + board.getHeight() - board.tilePadSize * (board.getRow() + 1) + board.padding;
 
         layout.setText(Lingo.getLetterFont(), value);
         width = layout.width;
@@ -59,22 +59,23 @@ public class Tile {
         sb.begin();
         float x = renderX;
         float y = renderY;
-        sb.draw(Resources.getTexture("blank"), x, y);
-        Lingo.getLetterFont().draw(sb, value, x + Lingo.TILE_SIZE / 2 - width / 2, y + Lingo.TILE_SIZE / 2 + height / 2);
+        sb.draw(Resources.getTexture("blank"), x, y, board.getTileSize(), board.getTileSize());
+        Lingo.getLetterFont().getData().setScale(board.getReduction());
+        Lingo.getLetterFont().draw(sb, value, x + board.getTileSize() / 2 - width / 2, y + board.getTileSize() / 2 + height / 2);
 
         switch (mark) {
             case NONE: break;
             case CORRECT:
-                sb.draw(Resources.getTexture("correct"), board.getTileX(col), board.getTileY(row), Board.TILE_PAD_SIZE, Board.TILE_PAD_SIZE);
+                sb.draw(Resources.getTexture("correct"), board.getTileX(col), board.getTileY(row), board.tilePadSize, board.tilePadSize);
                 break;
             case WRONG:
-                sb.draw(Resources.getTexture("wrong"), board.getTileX(col), board.getTileY(row), Board.TILE_PAD_SIZE, Board.TILE_PAD_SIZE);
+                sb.draw(Resources.getTexture("wrong"), board.getTileX(col), board.getTileY(row), board.tilePadSize, board.tilePadSize);
                 break;
             case BONUS:
-                sb.draw(Resources.getTexture("bonus"), board.getTileX(col), board.getTileY(row), Board.TILE_PAD_SIZE, Board.TILE_PAD_SIZE);
+                sb.draw(Resources.getTexture("bonus"), board.getTileX(col), board.getTileY(row), board.tilePadSize, board.tilePadSize);
                 break;
             case INVALID:
-                sb.draw(Resources.getTexture("invalid"), board.getTileX(col), board.getTileY(row), Board.TILE_PAD_SIZE, Board.TILE_PAD_SIZE);
+                sb.draw(Resources.getTexture("invalid"), board.getTileX(col), board.getTileY(row), board.tilePadSize, board.tilePadSize);
                 break;
         }
 

@@ -26,7 +26,7 @@ public class Cursor {
     }
 
     public void setPosition(int row, int col) {
-        //if (col == Board.WORD_LENGTH)
+        //if (col == Board.wordLength)
             //col--;
 
         renderX = board.getTileX(col);
@@ -37,7 +37,7 @@ public class Cursor {
     }
 
     public void advance() {
-        //if (col < Board.WORD_LENGTH - 1)
+        //if (col < Board.wordLength - 1)
             col++;
 
         setPosition(row, col);
@@ -51,11 +51,11 @@ public class Cursor {
     }
 
     public void render(SpriteBatch sb) {
-        if (col >= Board.WORD_LENGTH)
+        if (col >= board.getWordLength())
             return;
 
         sb.begin();
-        sb.draw(Resources.getTexture("cursor"), renderX, renderY, Board.TILE_PAD_SIZE, Board.TILE_PAD_SIZE);
+        sb.draw(Resources.getTexture("cursor"), renderX, renderY, board.tilePadSize, board.tilePadSize);
         sb.end();
     }
 }
